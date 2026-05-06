@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ExShaderLab</title>
+<script src="https://unpkg.com/excalibur@0.29.3/build/dist/excalibur.min.js"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=Syne:wght@400;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0a0b0f;
+    --panel:    #0f1117;
+    --surface:  #161923;
+    --border:   #1f2535;
+    --border2:  #2a3448;
+    --accent:   #3d7fff;
+    --accent2:  #7c3aed;
+    --green:    #22d3a5;
+    --red:      #ff4d6a;
+    --yellow:   #f0b429;
+    --text:     #c8d3f0;
+    --text-dim: #546e90;
+    --text-hi:  #e8f0ff;
+    --mono:     'JetBrains Mono', monospace;
+    --sans:     'Syne', sans-serif;
+  }
+
+  html, body, #root {
+    width: 100%; height: 100%; overflow: hidden;
+    background: var(--bg); color: var(--text);
+    font-family: var(--mono); font-size: 12px;
+  }
+
+  .layout {
+    display: flex; width: 100%; height: 100%;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 340px; min-width: 340px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .logo {
+    font-family: var(--sans); font-size: 18px; font-weight: 800;
+    letter-spacing: -0.5px; color: var(--text-hi);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .logo-badge {
+    font-size: 9px; font-weight: 600; letter-spacing: 1px;
+    padding: 2px 6px; border-radius: 3px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; font-family: var(--mono);
+  }
+
+  .sidebar-body {
+    flex: 1; overflow-y: auto; padding: 12px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .sidebar-body::-webkit-scrollbar { width: 4px; }
+  .sidebar-body::-webkit-scrollbar-track { background: transparent; }
+  .sidebar-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* ── SECTIONS ── */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .section-head {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 9px; font-weight: 600; letter-spacing: 1.5px;
+    color: var(--text-dim); text-transform: uppercase;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; user-select: none;
+  }
+
+  .section-head:hover { color: var(--text); }
+
+  .section-head .chevron {
+    transition: transform 0.2s; font-size: 8px;
+  }
+
+  .section-head .chevron.open { transform: rotate(90deg); }
+
+  .section-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .section-body.hidden { display: none; }
+
+  /* ── FORM CONTROLS ── */
+  .field { display: flex; flex-direction: column; gap: 3px; }
+  .field-row { display: flex; align-items: center; gap: 6px; }
+  .field-row .field { flex: 1; }
+
+  label {
+    font-size: 9px; color: var(--text-dim);
+    letter-spacing: 0.5px; font-weight: 400;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 3px;
+    background: var(--border2); border-radius: 2px; outline: none; cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 11px; height: 11px;
+    border-radius: 50%; background: var(--accent); cursor: pointer;
+    transition: transform 0.1s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+
+  input[type="number"], input[type="text"] {
+    background: var(--bg); border: 1px solid var(--border2);
+    color: var(--text); font-family: var(--mono); font-size: 11px;
+    padding: 4px 7px; border-radius: 4px; width: 100%;
+    outline: none; transition: border-color 0.15s;
+  }
+
+  input[type="number"]:focus, input[type="text"]:focus {
+    border-color: var(--accent);
+  }
+
+  /* ── SHADER EDITOR ── */
+  .shader-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    flex: 1; min-height: 0;
+  }
+
+  .shader-head {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 9px; font-weight: 600; letter-spacing: 1.5px;
+    color: var(--text-dim); text-transform: uppercase;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .shader-tabs {
+    display: flex; gap: 4px;
+  }
+
+  .shader-tab {
+    font-size: 8px; padding: 2px 7px; border-radius: 3px; cursor: pointer;
+    background: var(--border); color: var(--text-dim);
+    border: none; font-family: var(--mono); letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+
+  .shader-tab.active {
+    background: var(--accent); color: #fff;
+  }
+
+  textarea.code {
+    flex: 1; min-height: 160px;
+    background: var(--bg); border: none;
+    color: #8ecfff; font-family: var(--mono); font-size: 10.5px;
+    line-height: 1.6; padding: 10px;
+    resize: none; outline: none;
+    white-space: pre; overflow-wrap: normal; overflow-x: auto;
+  }
+
+  .shader-footer {
+    padding: 8px 10px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    padding: 5px 12px; border-radius: 4px; border: none;
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.5px; cursor: pointer; transition: all 0.15s;
+  }
+
+  .btn-primary {
+    background: var(--accent); color: #fff;
+  }
+
+  .btn-primary:hover { background: #5590ff; }
+
+  .btn-ghost {
+    background: transparent; color: var(--text-dim);
+    border: 1px solid var(--border2);
+  }
+
+  .btn-ghost:hover { color: var(--text); border-color: var(--text-dim); }
+
+  /* ── ERROR BOX ── */
+  .error-box {
+    background: rgba(255, 77, 106, 0.08);
+    border: 1px solid rgba(255, 77, 106, 0.3);
+    border-radius: 4px; padding: 8px 10px;
+    color: var(--red); font-size: 10px; line-height: 1.5;
+    white-space: pre-wrap; word-break: break-all;
+  }
+
+  .ok-box {
+    color: var(--green); font-size: 10px;
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  /* ── CANVAS AREA ── */
+  .canvas-wrap {
+    flex: 1; position: relative; overflow: hidden;
+    background: var(--bg);
+  }
+
+  #excalibur-root {
+    position: absolute; inset: 0;
+  }
+
+  #excalibur-root canvas {
+    display: block; width: 100% !important; height: 100% !important;
+  }
+
+  /* ── DEBUG BAR ── */
+  .debug-bar {
+    position: absolute; bottom: 10px; right: 12px;
+    display: flex; gap: 8px; align-items: center;
+    pointer-events: none;
+  }
+
+  .stat-chip {
+    background: rgba(10,11,15,0.85); border: 1px solid var(--border2);
+    border-radius: 4px; padding: 3px 8px;
+    font-size: 10px; color: var(--text-dim);
+    display: flex; gap: 4px; align-items: center;
+  }
+
+  .stat-chip span { color: var(--green); font-weight: 600; }
+
+  /* ── RANGE WITH VALUE ── */
+  .range-val {
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .range-val input[type="range"] { flex: 1; }
+
+  .val-display {
+    width: 38px; text-align: right; color: var(--accent);
+    font-size: 10px; font-weight: 600;
+  }
+
+  /* Scrollbar overall */
+  * { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ─── Presets ────────────────────────────────────────────────────────────────
+const PRESETS = {
+  plasma: `#version 300 es
+precision mediump float;
+
+uniform float u_time_ms;
+uniform vec2  u_resolution;
+uniform vec2  u_graphic_resolution;
+uniform sampler2D u_graphic;
+in vec2 v_uv;
+out vec4 fragColor;
+
+void main() {
+  vec2 uv = v_uv;
+  float t  = u_time_ms * 0.001;
+
+  float r = sin(uv.x * 8.0 + t * 1.3) * 0.5 + 0.5;
+  float g = sin(uv.y * 6.0 + t * 0.9 + 1.0) * 0.5 + 0.5;
+  float b = sin((uv.x + uv.y) * 5.0 + t * 1.7 + 2.0) * 0.5 + 0.5;
+
+  vec4 src  = texture(u_graphic, uv);
+  vec4 plasma = vec4(r, g, b, 1.0);
+
+  fragColor   = mix(src, plasma, 0.85);
+  fragColor.rgb *= fragColor.a;
+}`,
+
+  ripple: `#version 300 es
+precision mediump float;
+
+uniform float u_time_ms;
+uniform vec2  u_resolution;
+uniform vec2  u_graphic_resolution;
+uniform sampler2D u_graphic;
+in vec2 v_uv;
+out vec4 fragColor;
+
+void main() {
+  vec2 uv   = v_uv;
+  float t   = u_time_ms * 0.001;
+  vec2 center = vec2(0.5);
+  float dist  = distance(uv, center);
+  float wave  = sin(dist * 30.0 - t * 5.0) * 0.015;
+  vec2 warpedUV = uv + normalize(uv - center) * wave;
+
+  vec4 src = texture(u_graphic, clamp(warpedUV, 0.0, 1.0));
+  float ring = smoothstep(0.02, 0.0, abs(dist - fract(t * 0.5) * 0.7));
+  src.rgb   += vec3(ring * 0.8, ring * 0.4, ring * 1.2);
+
+  fragColor   = src;
+  fragColor.rgb *= fragColor.a;
+}`,
+
+  glitch: `#version 300 es
+precision mediump float;
+
+uniform float u_time_ms;
+uniform vec2  u_resolution;
+uniform vec2  u_graphic_resolution;
+uniform sampler2D u_graphic;
+in vec2 v_uv;
+out vec4 fragColor;
+
+float hash(float n) { return fract(sin(n) * 43758.5453); }
+
+void main() {
+  float t    = u_time_ms * 0.001;
+  vec2  uv   = v_uv;
+  float band = floor(uv.y * 24.0);
+  float glitchAmt = step(0.93, hash(band + floor(t * 6.0)));
+  float shift  = (hash(band * 13.7 + t) - 0.5) * 0.08 * glitchAmt;
+
+  vec4 rSamp = texture(u_graphic, vec2(clamp(uv.x + shift + 0.003, 0.0, 1.0), uv.y));
+  vec4 gSamp = texture(u_graphic, vec2(clamp(uv.x + shift,         0.0, 1.0), uv.y));
+  vec4 bSamp = texture(u_graphic, vec2(clamp(uv.x + shift - 0.003, 0.0, 1.0), uv.y));
+
+  fragColor   = vec4(rSamp.r, gSamp.g, bSamp.b, gSamp.a);
+  fragColor.rgb *= fragColor.a;
+}`,
+
+  voronoi: `#version 300 es
+precision mediump float;
+
+uniform float u_time_ms;
+uniform vec2  u_resolution;
+uniform vec2  u_graphic_resolution;
+uniform sampler2D u_graphic;
+in vec2 v_uv;
+out vec4 fragColor;
+
+vec2 hash2(vec2 p) {
+  p = vec2(dot(p,vec2(127.1,311.7)), dot(p,vec2(269.5,183.3)));
+  return fract(sin(p)*43758.5453);
+}
+
+void main() {
+  float t   = u_time_ms * 0.001;
+  vec2  uv  = v_uv * 5.0;
+  vec2  ip  = floor(uv);
+  vec2  fp  = fract(uv);
+  float md  = 8.0;
+  vec3  col = vec3(0.0);
+
+  for (int y = -1; y <= 1; y++) {
+    for (int x = -1; x <= 1; x++) {
+      vec2  nb  = vec2(float(x), float(y));
+      vec2  rnd = hash2(ip + nb);
+      vec2  dif = nb + (0.5 + 0.5 * sin(t + 6.28 * rnd)) - fp;
+      float d   = length(dif);
+      if (d < md) { md = d; col = vec3(rnd, 0.5); }
+    }
+  }
+
+  vec4 src  = texture(u_graphic, v_uv);
+  float edge = smoothstep(0.0, 0.05, md - 0.1);
+  fragColor  = mix(src, vec4(col, 1.0), 0.7) * edge + vec4(col * 0.1, 1.0) * (1.0 - edge);
+  fragColor.rgb *= fragColor.a;
+}`,
+};
+
+// ─── Collapsible section ─────────────────────────────────────────────────────
+function Section({ title, children, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="section">
+      <div className="section-head" onClick={() => setOpen(o => !o)}>
+        {title}
+        <span className={`chevron ${open ? 'open' : ''}`}>▶</span>
+      </div>
+      <div className={`section-body ${open ? '' : 'hidden'}`}>{children}</div>
+    </div>
+  );
+}
+
+// ─── Range slider ────────────────────────────────────────────────────────────
+function Slider({ label, min, max, step = 0.01, value, onChange }) {
+  return (
+    <div className="field">
+      <label>{label}</label>
+      <div className="range-val">
+        <input type="range" min={min} max={max} step={step} value={value}
+          onChange={e => onChange(parseFloat(e.target.value))} />
+        <span className="val-display">{typeof value === 'number' ? value.toFixed(step < 0.1 ? 2 : 0) : value}</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main App ────────────────────────────────────────────────────────────────
+function App() {
+  const engineRef   = useRef(null);
+  const actorRef    = useRef(null);
+  const materialRef = useRef(null);
+  const frameRef    = useRef(null);
+
+  const [ready,    setReady]    = useState(false);
+  const [fps,      setFps]      = useState(0);
+  const [shader,   setShader]   = useState(PRESETS.plasma);
+  const [preset,   setPreset]   = useState('plasma');
+  const [error,    setError]    = useState('');
+  const [compiled, setCompiled] = useState(false);
+
+  // Actor controls
+  const [posX,  setPosX]  = useState(0);
+  const [posY,  setPosY]  = useState(0);
+  const [scale, setScale] = useState(1.0);
+  const [rot,   setRot]   = useState(0);
+
+  // Actor size
+  const [actW,  setActW]  = useState(300);
+  const [actH,  setActH]  = useState(300);
+
+  // ── Bootstrap Excalibur ────────────────────────────────────────────────────
+  useEffect(() => {
+    const container = document.getElementById('excalibur-root');
+    const W = container.clientWidth  || 800;
+    const H = container.clientHeight || 600;
+
+    const game = new ex.Engine({
+      canvasElement: (() => {
+        const c = document.createElement('canvas');
+        container.appendChild(c);
+        return c;
+      })(),
+      width:  W,
+      height: H,
+      displayMode: ex.DisplayMode.FillContainer,
+      backgroundColor: ex.Color.fromHex('#0a0b0f'),
+      antialiasing: false,
+    });
+
+    engineRef.current = game;
+
+    const scene = new ex.Scene();
+    game.addScene('main', scene);
+
+    const actor = new ex.Actor({
+      pos: ex.vec(W / 2, H / 2),
+      width:  300,
+      height: 300,
+      color:  ex.Color.fromHex('#3d7fff'),
+    });
+
+    actorRef.current = actor;
+    scene.add(actor);
+
+    game.start().then(() => {
+      game.goToScene('main');
+
+      // Create initial material
+      applyShader(PRESETS.plasma, game, actor);
+      setReady(true);
+
+      // FPS update
+      frameRef.current = setInterval(() => {
+        setFps(Math.round(game.stats.currFrame.fps));
+      }, 500);
+    });
+
+    return () => {
+      clearInterval(frameRef.current);
+      game.stop();
+    };
+  }, []);
+
+  // ── Apply shader to actor ─────────────────────────────────────────────────
+  const applyShader = useCallback((src, gameInst, actorInst) => {
+    const game  = gameInst  || engineRef.current;
+    const actor = actorInst || actorRef.current;
+    if (!game || !actor) return;
+
+    try {
+      // Dispose old material if any
+      if (materialRef.current) {
+        try { materialRef.current.dispose?.(); } catch (_) {}
+        materialRef.current = null;
+        actor.graphics.material = null;
+      }
+
+      const mat = game.graphicsContext.createMaterial({
+        name: `mat_${Date.now()}`,
+        fragmentSource: src,
+      });
+
+      materialRef.current      = mat;
+      actor.graphics.material  = mat;
+      setError('');
+      setCompiled(true);
+    } catch (e) {
+      setError(String(e?.message || e));
+      setCompiled(false);
+    }
+  }, []);
+
+  // ── Sync actor transform ──────────────────────────────────────────────────
+  useEffect(() => {
+    const actor = actorRef.current;
+    if (!actor) return;
+    const game = engineRef.current;
+    if (!game) return;
+    const W = game.drawWidth  || 800;
+    const H = game.drawHeight || 600;
+    actor.pos    = ex.vec(W / 2 + posX, H / 2 + posY);
+    actor.scale  = ex.vec(scale, scale);
+    actor.rotation = rot * (Math.PI / 180);
+  }, [posX, posY, scale, rot]);
+
+  // ── Preset select ─────────────────────────────────────────────────────────
+  const selectPreset = (name) => {
+    setPreset(name);
+    setShader(PRESETS[name]);
+    if (ready) applyShader(PRESETS[name]);
+  };
+
+  // ── Apply button ──────────────────────────────────────────────────────────
+  const handleApply = () => {
+    if (ready) applyShader(shader);
+  };
+
+  return (
+    <div className="layout">
+      {/* ── SIDEBAR ── */}
+      <div className="sidebar">
+        <div className="sidebar-header">
+          <div className="logo">
+            ExShaderLab <span className="logo-badge">EXCALIBUR</span>
+          </div>
+        </div>
+
+        <div className="sidebar-body">
+
+          {/* Shader Editor */}
+          <div className="shader-section">
+            <div className="shader-head">
+              <span>Fragment Shader</span>
+              <div className="shader-tabs">
+                {Object.keys(PRESETS).map(p => (
+                  <button key={p} className={`shader-tab ${preset === p ? 'active' : ''}`}
+                    onClick={() => selectPreset(p)}>{p}</button>
+                ))}
+              </div>
+            </div>
+            <textarea className="code" spellCheck={false}
+              value={shader}
+              onChange={e => { setShader(e.target.value); setCompiled(false); }}
+            />
+            <div className="shader-footer">
+              <button className="btn btn-primary" onClick={handleApply}>▶ Apply</button>
+              {error
+                ? <span style={{fontSize:9,color:'var(--red)'}}>✕ compile error</span>
+                : compiled
+                  ? <span className="ok-box">✓ compiled</span>
+                  : <span style={{fontSize:9,color:'var(--text-dim)'}}>pending</span>
+              }
+            </div>
+            {error && <div className="error-box" style={{margin:'0 10px 10px'}}>{error}</div>}
+          </div>
+
+          {/* Built-in uniforms info */}
+          <Section title="Built-in Uniforms" defaultOpen={false}>
+            {[
+              ['u_time_ms',          'float — ms since page load'],
+              ['u_resolution',       'vec2  — screen resolution'],
+              ['u_graphic_resolution','vec2  — graphic resolution'],
+              ['u_graphic',          'sampler2D — actor texture'],
+              ['v_uv',               'vec2  — UV [0..1] (in)'],
+            ].map(([n,d]) => (
+              <div key={n} style={{display:'flex',gap:6,alignItems:'baseline'}}>
+                <span style={{color:'var(--accent)',minWidth:140,fontSize:10}}>{n}</span>
+                <span style={{color:'var(--text-dim)',fontSize:9}}>{d}</span>
+              </div>
+            ))}
+          </Section>
+
+          {/* Actor controls */}
+          <Section title="Actor Transform">
+            <div className="field-row">
+              <div className="field">
+                <label>Offset X</label>
+                <input type="number" value={posX}
+                  onChange={e => setPosX(+e.target.value)} step="10" />
+              </div>
+              <div className="field">
+                <label>Offset Y</label>
+                <input type="number" value={posY}
+                  onChange={e => setPosY(+e.target.value)} step="10" />
+              </div>
+            </div>
+            <Slider label="Scale" min={0.1} max={4} step={0.05} value={scale} onChange={setScale} />
+            <Slider label="Rotation (deg)" min={-180} max={180} step={1} value={rot} onChange={setRot} />
+          </Section>
+
+          {/* Debug */}
+          <Section title="Debug" defaultOpen={true}>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+              <div className="stat-chip">FPS <span>{fps}</span></div>
+              <div className="stat-chip">Engine <span>{ready ? 'running' : 'init…'}</span></div>
+              <div className="stat-chip">Shader <span style={{color: error ? 'var(--red)' : 'var(--green)'}}>
+                {error ? 'error' : compiled ? 'ok' : '—'}
+              </span></div>
+            </div>
+          </Section>
+
+        </div>
+      </div>
+
+      {/* ── CANVAS ── */}
+      <div className="canvas-wrap">
+        <div id="excalibur-root" />
+        <div className="debug-bar">
+          <div className="stat-chip">{fps} <span>fps</span></div>
+          <div className="stat-chip">ExcaliburJS <span>0.29</span></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
