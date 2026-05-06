@@ -1,287 +1,606 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>ExShaderLab</title>
-<script src="https://unpkg.com/excalibur@0.29.3/build/dist/excalibur.min.js"></script>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=Syne:wght@400;600;700;800&display=swap');
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ExShaderLab</title>
+    <script src="https://unpkg.com/excalibur@0.29.3/build/dist/excalibur.min.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=Syne:wght@400;600;700;800&display=swap");
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-  :root {
-    --bg:       #0a0b0f;
-    --panel:    #0f1117;
-    --surface:  #161923;
-    --border:   #1f2535;
-    --border2:  #2a3448;
-    --accent:   #3d7fff;
-    --accent2:  #7c3aed;
-    --green:    #22d3a5;
-    --red:      #ff4d6a;
-    --yellow:   #f0b429;
-    --text:     #c8d3f0;
-    --text-dim: #546e90;
-    --text-hi:  #e8f0ff;
-    --mono:     'JetBrains Mono', monospace;
-    --sans:     'Syne', sans-serif;
-  }
+      :root {
+        --bg: #0a0b0f;
+        --panel: #0f1117;
+        --surface: #161923;
+        --border: #1f2535;
+        --border2: #2a3448;
+        --accent: #3d7fff;
+        --accent2: #7c3aed;
+        --green: #22d3a5;
+        --red: #ff4d6a;
+        --text: #c8d3f0;
+        --text-dim: #546e90;
+        --text-hi: #e8f0ff;
+        --mono: "JetBrains Mono", monospace;
+        --sans: "Syne", sans-serif;
+      }
 
-  html, body, #root {
-    width: 100%; height: 100%; overflow: hidden;
-    background: var(--bg); color: var(--text);
-    font-family: var(--mono); font-size: 12px;
-  }
+      html,
+      body,
+      #root {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
 
-  .layout {
-    display: flex; width: 100%; height: 100%;
-  }
+      .layout {
+        display: flex;
+        width: 100%;
+        height: 100%;
+      }
 
-  /* ── SIDEBAR ── */
-  .sidebar {
-    width: 340px; min-width: 340px;
-    background: var(--panel);
-    border-right: 1px solid var(--border);
-    display: flex; flex-direction: column;
-    overflow: hidden;
-  }
+      /* ── SIDEBAR ── */
+      .sidebar {
+        min-width: 220px;
+        max-width: 600px;
+        background: var(--panel);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        flex-shrink: 0;
+        position: relative;
+      }
 
-  .sidebar-header {
-    padding: 14px 16px 10px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
+      /* Drag handle strip on right edge */
+      .resize-handle {
+        position: absolute;
+        top: 0;
+        right: -3px;
+        bottom: 0;
+        width: 6px;
+        cursor: col-resize;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
-  .logo {
-    font-family: var(--sans); font-size: 18px; font-weight: 800;
-    letter-spacing: -0.5px; color: var(--text-hi);
-    display: flex; align-items: center; gap: 8px;
-  }
+      .resize-handle::after {
+        content: "";
+        display: block;
+        width: 2px;
+        height: 40px;
+        border-radius: 1px;
+        background: var(--border2);
+        transition:
+          background 0.15s,
+          height 0.15s;
+      }
 
-  .logo-badge {
-    font-size: 9px; font-weight: 600; letter-spacing: 1px;
-    padding: 2px 6px; border-radius: 3px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: #fff; font-family: var(--mono);
-  }
+      .resize-handle:hover::after,
+      .resize-handle.dragging::after {
+        background: var(--accent);
+        height: 60px;
+      }
 
-  .sidebar-body {
-    flex: 1; overflow-y: auto; padding: 12px;
-    display: flex; flex-direction: column; gap: 10px;
-  }
+      /* Full-window overlay while dragging keeps cursor correct over canvas */
+      .drag-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        cursor: col-resize;
+      }
 
-  .sidebar-body::-webkit-scrollbar { width: 4px; }
-  .sidebar-body::-webkit-scrollbar-track { background: transparent; }
-  .sidebar-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+      .sidebar-header {
+        padding: 14px 16px 10px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
 
-  /* ── SECTIONS ── */
-  .section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    overflow: hidden;
-  }
+      .logo {
+        font-family: var(--sans);
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        color: var(--text-hi);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
 
-  .section-head {
-    padding: 7px 10px;
-    border-bottom: 1px solid var(--border);
-    font-size: 9px; font-weight: 600; letter-spacing: 1.5px;
-    color: var(--text-dim); text-transform: uppercase;
-    display: flex; align-items: center; justify-content: space-between;
-    cursor: pointer; user-select: none;
-  }
+      .logo-badge {
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        padding: 2px 6px;
+        border-radius: 3px;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        font-family: var(--mono);
+      }
 
-  .section-head:hover { color: var(--text); }
+      .sidebar-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
 
-  .section-head .chevron {
-    transition: transform 0.2s; font-size: 8px;
-  }
+      .sidebar-body::-webkit-scrollbar {
+        width: 4px;
+      }
+      .sidebar-body::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .sidebar-body::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 2px;
+      }
 
-  .section-head .chevron.open { transform: rotate(90deg); }
+      /* ── SECTIONS ── */
+      .section {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+      }
 
-  .section-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-  .section-body.hidden { display: none; }
+      .section-head {
+        padding: 7px 10px;
+        border-bottom: 1px solid var(--border);
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        user-select: none;
+      }
 
-  /* ── FORM CONTROLS ── */
-  .field { display: flex; flex-direction: column; gap: 3px; }
-  .field-row { display: flex; align-items: center; gap: 6px; }
-  .field-row .field { flex: 1; }
+      .section-head:hover {
+        color: var(--text);
+      }
+      .section-head .chevron {
+        transition: transform 0.2s;
+        font-size: 8px;
+      }
+      .section-head .chevron.open {
+        transform: rotate(90deg);
+      }
 
-  label {
-    font-size: 9px; color: var(--text-dim);
-    letter-spacing: 0.5px; font-weight: 400;
-  }
+      .section-body {
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .section-body.hidden {
+        display: none;
+      }
 
-  input[type="range"] {
-    -webkit-appearance: none; appearance: none;
-    width: 100%; height: 3px;
-    background: var(--border2); border-radius: 2px; outline: none; cursor: pointer;
-  }
+      /* ── FORM CONTROLS ── */
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+      .field-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .field-row .field {
+        flex: 1;
+      }
 
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 11px; height: 11px;
-    border-radius: 50%; background: var(--accent); cursor: pointer;
-    transition: transform 0.1s;
-  }
+      label {
+        font-size: 9px;
+        color: var(--text-dim);
+        letter-spacing: 0.5px;
+        font-weight: 400;
+      }
 
-  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 3px;
+        background: var(--border2);
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+      }
 
-  input[type="number"], input[type="text"] {
-    background: var(--bg); border: 1px solid var(--border2);
-    color: var(--text); font-family: var(--mono); font-size: 11px;
-    padding: 4px 7px; border-radius: 4px; width: 100%;
-    outline: none; transition: border-color 0.15s;
-  }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: var(--accent);
+        cursor: pointer;
+        transition: transform 0.1s;
+      }
 
-  input[type="number"]:focus, input[type="text"]:focus {
-    border-color: var(--accent);
-  }
+      input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.3);
+      }
 
-  /* ── SHADER EDITOR ── */
-  .shader-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    overflow: hidden;
-    display: flex; flex-direction: column;
-    flex: 1; min-height: 0;
-  }
+      input[type="number"],
+      input[type="text"] {
+        background: var(--bg);
+        border: 1px solid var(--border2);
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 4px 7px;
+        border-radius: 4px;
+        width: 100%;
+        outline: none;
+        transition: border-color 0.15s;
+      }
 
-  .shader-head {
-    padding: 7px 10px;
-    border-bottom: 1px solid var(--border);
-    font-size: 9px; font-weight: 600; letter-spacing: 1.5px;
-    color: var(--text-dim); text-transform: uppercase;
-    display: flex; align-items: center; justify-content: space-between;
-    flex-shrink: 0;
-  }
+      input[type="number"]:focus,
+      input[type="text"]:focus {
+        border-color: var(--accent);
+      }
 
-  .shader-tabs {
-    display: flex; gap: 4px;
-  }
+      /* ── SHADER EDITOR ── */
+      .shader-section {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+      }
 
-  .shader-tab {
-    font-size: 8px; padding: 2px 7px; border-radius: 3px; cursor: pointer;
-    background: var(--border); color: var(--text-dim);
-    border: none; font-family: var(--mono); letter-spacing: 0.5px;
-    transition: all 0.15s;
-  }
+      .shader-head {
+        padding: 7px 10px;
+        border-bottom: 1px solid var(--border);
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
 
-  .shader-tab.active {
-    background: var(--accent); color: #fff;
-  }
+      .shader-tabs {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
 
-  textarea.code {
-    flex: 1; min-height: 160px;
-    background: var(--bg); border: none;
-    color: #8ecfff; font-family: var(--mono); font-size: 10.5px;
-    line-height: 1.6; padding: 10px;
-    resize: none; outline: none;
-    white-space: pre; overflow-wrap: normal; overflow-x: auto;
-  }
+      .shader-tab {
+        font-size: 8px;
+        padding: 2px 7px;
+        border-radius: 3px;
+        cursor: pointer;
+        background: var(--border);
+        color: var(--text-dim);
+        border: none;
+        font-family: var(--mono);
+        letter-spacing: 0.5px;
+        transition: all 0.15s;
+      }
 
-  .shader-footer {
-    padding: 8px 10px;
-    border-top: 1px solid var(--border);
-    display: flex; align-items: center; gap: 8px;
-    flex-shrink: 0;
-  }
+      .shader-tab.active {
+        background: var(--accent);
+        color: #fff;
+      }
 
-  /* ── BUTTONS ── */
-  .btn {
-    padding: 5px 12px; border-radius: 4px; border: none;
-    font-family: var(--mono); font-size: 10px; font-weight: 600;
-    letter-spacing: 0.5px; cursor: pointer; transition: all 0.15s;
-  }
+      textarea.code {
+        flex: 1;
+        min-height: 160px;
+        background: var(--bg);
+        border: none;
+        color: #8ecfff;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        line-height: 1.6;
+        padding: 10px;
+        resize: none;
+        outline: none;
+        white-space: pre;
+        overflow-wrap: normal;
+        overflow-x: auto;
+      }
 
-  .btn-primary {
-    background: var(--accent); color: #fff;
-  }
+      .shader-footer {
+        padding: 8px 10px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
 
-  .btn-primary:hover { background: #5590ff; }
+      /* ── BUTTONS ── */
+      .btn {
+        padding: 5px 12px;
+        border-radius: 4px;
+        border: none;
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
 
-  .btn-ghost {
-    background: transparent; color: var(--text-dim);
-    border: 1px solid var(--border2);
-  }
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: #5590ff;
+      }
 
-  .btn-ghost:hover { color: var(--text); border-color: var(--text-dim); }
+      /* ── ERROR ── */
+      .error-box {
+        background: rgba(255, 77, 106, 0.08);
+        border: 1px solid rgba(255, 77, 106, 0.3);
+        border-radius: 4px;
+        padding: 8px 10px;
+        color: var(--red);
+        font-size: 10px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
 
-  /* ── ERROR BOX ── */
-  .error-box {
-    background: rgba(255, 77, 106, 0.08);
-    border: 1px solid rgba(255, 77, 106, 0.3);
-    border-radius: 4px; padding: 8px 10px;
-    color: var(--red); font-size: 10px; line-height: 1.5;
-    white-space: pre-wrap; word-break: break-all;
-  }
+      .ok-box {
+        color: var(--green);
+        font-size: 10px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
 
-  .ok-box {
-    color: var(--green); font-size: 10px;
-    display: flex; align-items: center; gap: 4px;
-  }
+      /* ── CUSTOM UNIFORMS ── */
+      .uniform-row {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 7px 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+      }
 
-  /* ── CANVAS AREA ── */
-  .canvas-wrap {
-    flex: 1; position: relative; overflow: hidden;
-    background: var(--bg);
-  }
+      .uniform-label-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
 
-  #excalibur-root {
-    position: absolute; inset: 0;
-  }
+      .type-badge {
+        font-size: 8px;
+        padding: 1px 5px;
+        border-radius: 2px;
+        background: rgba(61, 127, 255, 0.12);
+        color: var(--accent);
+        border: 1px solid rgba(61, 127, 255, 0.25);
+        flex-shrink: 0;
+      }
 
-  #excalibur-root canvas {
-    display: block; width: 100% !important; height: 100% !important;
-  }
+      .type-badge.vec {
+        background: rgba(124, 58, 237, 0.12);
+        color: var(--accent2);
+        border-color: rgba(124, 58, 237, 0.25);
+      }
 
-  /* ── DEBUG BAR ── */
-  .debug-bar {
-    position: absolute; bottom: 10px; right: 12px;
-    display: flex; gap: 8px; align-items: center;
-    pointer-events: none;
-  }
+      .uniform-name {
+        font-size: 10px;
+        color: var(--text);
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
-  .stat-chip {
-    background: rgba(10,11,15,0.85); border: 1px solid var(--border2);
-    border-radius: 4px; padding: 3px 8px;
-    font-size: 10px; color: var(--text-dim);
-    display: flex; gap: 4px; align-items: center;
-  }
+      .uniform-inputs {
+        display: flex;
+        gap: 4px;
+      }
+      .uniform-inputs .field {
+        flex: 1;
+      }
 
-  .stat-chip span { color: var(--green); font-weight: 600; }
+      .comp-label {
+        font-size: 8px;
+        color: var(--text-dim);
+        text-align: center;
+        margin-bottom: 1px;
+      }
 
-  /* ── RANGE WITH VALUE ── */
-  .range-val {
-    display: flex; align-items: center; gap: 6px;
-  }
+      .range-val {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .range-val input[type="range"] {
+        flex: 1;
+      }
+      .range-num {
+        width: 52px;
+        flex-shrink: 0;
+      }
 
-  .range-val input[type="range"] { flex: 1; }
+      .no-uniforms {
+        font-size: 10px;
+        color: var(--text-dim);
+        font-style: italic;
+        text-align: center;
+        padding: 6px 0;
+        line-height: 1.8;
+      }
 
-  .val-display {
-    width: 38px; text-align: right; color: var(--accent);
-    font-size: 10px; font-weight: 600;
-  }
+      /* ── CANVAS ── */
+      .canvas-wrap {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+        background: var(--bg);
+      }
 
-  /* Scrollbar overall */
-  * { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
-</style>
-</head>
-<body>
-<div id="root"></div>
+      #excalibur-root {
+        position: absolute;
+        inset: 0;
+      }
+      #excalibur-root canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+      }
 
-<script type="text/babel">
-const { useState, useEffect, useRef, useCallback } = React;
+      /* ── DEBUG BAR ── */
+      .debug-bar {
+        position: absolute;
+        bottom: 10px;
+        right: 12px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        pointer-events: none;
+      }
 
-// ─── Presets ────────────────────────────────────────────────────────────────
-const PRESETS = {
-  plasma: `#version 300 es
+      .stat-chip {
+        background: rgba(10, 11, 15, 0.85);
+        border: 1px solid var(--border2);
+        border-radius: 4px;
+        padding: 3px 8px;
+        font-size: 10px;
+        color: var(--text-dim);
+        display: flex;
+        gap: 4px;
+        align-items: center;
+      }
+
+      .stat-chip span {
+        color: var(--green);
+        font-weight: 600;
+      }
+
+      /* Slider with inline value */
+      .slider-row {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+      .slider-inner {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .slider-inner input[type="range"] {
+        flex: 1;
+      }
+      .val-display {
+        width: 38px;
+        text-align: right;
+        color: var(--accent);
+        font-size: 10px;
+        font-weight: 600;
+      }
+
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--border2) transparent;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+      // ─── Built-in uniforms Excalibur injects automatically ───────────────────────
+      const BUILTINS = new Set([
+        "u_time_ms",
+        "u_resolution",
+        "u_graphic_resolution",
+        "u_graphic",
+        "u_color",
+        "u_opacity",
+        "u_size",
+        "u_screen_size",
+        "u_graphic_origin",
+      ]);
+
+      // ─── Parse non-builtin uniform declarations from GLSL source ─────────────────
+      function parseCustomUniforms(src) {
+        const rx = /^\s*uniform\s+(float|int|bool|vec[234]|ivec[234])\s+(\w+)\s*;/gm;
+        const out = [];
+        let m;
+        while ((m = rx.exec(src)) !== null) {
+          if (!BUILTINS.has(m[2])) out.push({ type: m[1], name: m[2] });
+        }
+        return out;
+      }
+
+      function compCount(type) {
+        if (/vec2/.test(type)) return 2;
+        if (/vec3/.test(type)) return 3;
+        if (/vec4/.test(type)) return 4;
+        return 1;
+      }
+
+      function defaultForType(type) {
+        const n = compCount(type);
+        if (n === 1) return [0.5];
+        if (n === 2) return [0.5, 0.5];
+        if (n === 3) return [0.5, 0.5, 0.5];
+        return [0.5, 0.5, 0.5, 1.0];
+      }
+
+      function pushUniform(shader, name, type, vals) {
+        try {
+          const isInt = type === "int" || type === "bool" || type.startsWith("ivec");
+          const n = compCount(type);
+          if (n === 1) {
+            if (isInt) shader.trySetUniformInt(name, Math.round(vals[0]));
+            else shader.trySetUniformFloat(name, vals[0]);
+          } else {
+            const obj = { x: vals[0] ?? 0, y: vals[1] ?? 0, z: vals[2] ?? 0, w: vals[3] ?? 1 };
+            shader.trySetUniformFloatVector(name, obj);
+          }
+        } catch (_) {}
+      }
+
+      // ─── Presets ──────────────────────────────────────────────────────────────────
+      const PRESETS = {
+        plasma: `#version 300 es
 precision mediump float;
-
 uniform float u_time_ms;
 uniform vec2  u_resolution;
 uniform vec2  u_graphic_resolution;
@@ -291,79 +610,87 @@ out vec4 fragColor;
 
 void main() {
   vec2 uv = v_uv;
-  float t  = u_time_ms * 0.001;
-
+  float t = u_time_ms * 0.001;
   float r = sin(uv.x * 8.0 + t * 1.3) * 0.5 + 0.5;
   float g = sin(uv.y * 6.0 + t * 0.9 + 1.0) * 0.5 + 0.5;
   float b = sin((uv.x + uv.y) * 5.0 + t * 1.7 + 2.0) * 0.5 + 0.5;
-
-  vec4 src  = texture(u_graphic, uv);
-  vec4 plasma = vec4(r, g, b, 1.0);
-
-  fragColor   = mix(src, plasma, 0.85);
+  vec4 src = texture(u_graphic, uv);
+  fragColor = mix(src, vec4(r, g, b, 1.0), 0.85);
   fragColor.rgb *= fragColor.a;
 }`,
 
-  ripple: `#version 300 es
+        ripple: `#version 300 es
 precision mediump float;
-
 uniform float u_time_ms;
 uniform vec2  u_resolution;
 uniform vec2  u_graphic_resolution;
 uniform sampler2D u_graphic;
+
+// ---- custom uniforms ----
+uniform float u_wave_speed;
+uniform float u_wave_freq;
+uniform float u_wave_amp;
+// -------------------------
+
 in vec2 v_uv;
 out vec4 fragColor;
 
 void main() {
-  vec2 uv   = v_uv;
-  float t   = u_time_ms * 0.001;
+  float t = u_time_ms * 0.001 * u_wave_speed;
   vec2 center = vec2(0.5);
-  float dist  = distance(uv, center);
-  float wave  = sin(dist * 30.0 - t * 5.0) * 0.015;
-  vec2 warpedUV = uv + normalize(uv - center) * wave;
-
-  vec4 src = texture(u_graphic, clamp(warpedUV, 0.0, 1.0));
+  float dist = distance(v_uv, center);
+  float wave = sin(dist * u_wave_freq - t * 5.0) * u_wave_amp;
+  vec2 wuv = v_uv + normalize(v_uv - center) * wave;
+  vec4 src = texture(u_graphic, clamp(wuv, 0.0, 1.0));
   float ring = smoothstep(0.02, 0.0, abs(dist - fract(t * 0.5) * 0.7));
-  src.rgb   += vec3(ring * 0.8, ring * 0.4, ring * 1.2);
-
-  fragColor   = src;
+  src.rgb += vec3(ring * 0.8, ring * 0.4, ring * 1.2);
+  fragColor = src;
   fragColor.rgb *= fragColor.a;
 }`,
 
-  glitch: `#version 300 es
+        glitch: `#version 300 es
 precision mediump float;
-
 uniform float u_time_ms;
 uniform vec2  u_resolution;
 uniform vec2  u_graphic_resolution;
 uniform sampler2D u_graphic;
+
+// ---- custom uniforms ----
+uniform float u_glitch_intensity;
+uniform float u_glitch_speed;
+uniform float u_band_count;
+// -------------------------
+
 in vec2 v_uv;
 out vec4 fragColor;
 
 float hash(float n) { return fract(sin(n) * 43758.5453); }
 
 void main() {
-  float t    = u_time_ms * 0.001;
-  vec2  uv   = v_uv;
-  float band = floor(uv.y * 24.0);
-  float glitchAmt = step(0.93, hash(band + floor(t * 6.0)));
-  float shift  = (hash(band * 13.7 + t) - 0.5) * 0.08 * glitchAmt;
-
-  vec4 rSamp = texture(u_graphic, vec2(clamp(uv.x + shift + 0.003, 0.0, 1.0), uv.y));
-  vec4 gSamp = texture(u_graphic, vec2(clamp(uv.x + shift,         0.0, 1.0), uv.y));
-  vec4 bSamp = texture(u_graphic, vec2(clamp(uv.x + shift - 0.003, 0.0, 1.0), uv.y));
-
-  fragColor   = vec4(rSamp.r, gSamp.g, bSamp.b, gSamp.a);
+  float t = u_time_ms * 0.001;
+  float band = floor(v_uv.y * u_band_count);
+  float amt = step(1.0 - u_glitch_intensity, hash(band + floor(t * u_glitch_speed)));
+  float shift = (hash(band * 13.7 + t) - 0.5) * 0.08 * amt;
+  vec4 r = texture(u_graphic, vec2(clamp(v_uv.x + shift + 0.003, 0.0, 1.0), v_uv.y));
+  vec4 g = texture(u_graphic, vec2(clamp(v_uv.x + shift,         0.0, 1.0), v_uv.y));
+  vec4 b = texture(u_graphic, vec2(clamp(v_uv.x + shift - 0.003, 0.0, 1.0), v_uv.y));
+  fragColor = vec4(r.r, g.g, b.b, g.a);
   fragColor.rgb *= fragColor.a;
 }`,
 
-  voronoi: `#version 300 es
+        voronoi: `#version 300 es
 precision mediump float;
-
 uniform float u_time_ms;
 uniform vec2  u_resolution;
 uniform vec2  u_graphic_resolution;
 uniform sampler2D u_graphic;
+
+// ---- custom uniforms ----
+uniform float u_cell_scale;
+uniform float u_anim_speed;
+uniform vec3  u_edge_color;
+// -------------------------
+
 in vec2 v_uv;
 out vec4 fragColor;
 
@@ -373,289 +700,466 @@ vec2 hash2(vec2 p) {
 }
 
 void main() {
-  float t   = u_time_ms * 0.001;
-  vec2  uv  = v_uv * 5.0;
-  vec2  ip  = floor(uv);
-  vec2  fp  = fract(uv);
-  float md  = 8.0;
-  vec3  col = vec3(0.0);
-
+  float t = u_time_ms * 0.001 * u_anim_speed;
+  vec2 uv = v_uv * u_cell_scale;
+  vec2 ip = floor(uv), fp = fract(uv);
+  float md = 8.0; vec3 col = vec3(0.0);
   for (int y = -1; y <= 1; y++) {
     for (int x = -1; x <= 1; x++) {
-      vec2  nb  = vec2(float(x), float(y));
-      vec2  rnd = hash2(ip + nb);
-      vec2  dif = nb + (0.5 + 0.5 * sin(t + 6.28 * rnd)) - fp;
-      float d   = length(dif);
-      if (d < md) { md = d; col = vec3(rnd, 0.5); }
+      vec2 nb = vec2(float(x),float(y));
+      vec2 rnd = hash2(ip+nb);
+      vec2 dif = nb + (0.5+0.5*sin(t+6.28*rnd)) - fp;
+      float d = length(dif);
+      if (d < md) { md = d; col = vec3(rnd,0.5); }
     }
   }
-
-  vec4 src  = texture(u_graphic, v_uv);
-  float edge = smoothstep(0.0, 0.05, md - 0.1);
-  fragColor  = mix(src, vec4(col, 1.0), 0.7) * edge + vec4(col * 0.1, 1.0) * (1.0 - edge);
+  vec4 src = texture(u_graphic, v_uv);
+  float edge = smoothstep(0.0,0.05,md-0.1);
+  fragColor = mix(src,vec4(col,1.0),0.7)*edge + vec4(u_edge_color*0.15,1.0)*(1.0-edge);
   fragColor.rgb *= fragColor.a;
 }`,
-};
+      };
 
-// ─── Collapsible section ─────────────────────────────────────────────────────
-function Section({ title, children, defaultOpen = true }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="section">
-      <div className="section-head" onClick={() => setOpen(o => !o)}>
-        {title}
-        <span className={`chevron ${open ? 'open' : ''}`}>▶</span>
-      </div>
-      <div className={`section-body ${open ? '' : 'hidden'}`}>{children}</div>
-    </div>
-  );
-}
+      // Default values for preset custom uniforms so they open with sensible numbers
+      const PRESET_DEFAULTS = {
+        ripple: { u_wave_speed: [1.0], u_wave_freq: [30.0], u_wave_amp: [0.015] },
+        glitch: { u_glitch_intensity: [0.07], u_glitch_speed: [6.0], u_band_count: [24.0] },
+        voronoi: { u_cell_scale: [5.0], u_anim_speed: [1.0], u_edge_color: [0.1, 0.1, 0.4] },
+      };
 
-// ─── Range slider ────────────────────────────────────────────────────────────
-function Slider({ label, min, max, step = 0.01, value, onChange }) {
-  return (
-    <div className="field">
-      <label>{label}</label>
-      <div className="range-val">
-        <input type="range" min={min} max={max} step={step} value={value}
-          onChange={e => onChange(parseFloat(e.target.value))} />
-        <span className="val-display">{typeof value === 'number' ? value.toFixed(step < 0.1 ? 2 : 0) : value}</span>
-      </div>
-    </div>
-  );
-}
-
-// ─── Main App ────────────────────────────────────────────────────────────────
-function App() {
-  const engineRef   = useRef(null);
-  const actorRef    = useRef(null);
-  const materialRef = useRef(null);
-  const frameRef    = useRef(null);
-
-  const [ready,    setReady]    = useState(false);
-  const [fps,      setFps]      = useState(0);
-  const [shader,   setShader]   = useState(PRESETS.plasma);
-  const [preset,   setPreset]   = useState('plasma');
-  const [error,    setError]    = useState('');
-  const [compiled, setCompiled] = useState(false);
-
-  // Actor controls
-  const [posX,  setPosX]  = useState(0);
-  const [posY,  setPosY]  = useState(0);
-  const [scale, setScale] = useState(1.0);
-  const [rot,   setRot]   = useState(0);
-
-  // Actor size
-  const [actW,  setActW]  = useState(300);
-  const [actH,  setActH]  = useState(300);
-
-  // ── Bootstrap Excalibur ────────────────────────────────────────────────────
-  useEffect(() => {
-    const container = document.getElementById('excalibur-root');
-    const W = container.clientWidth  || 800;
-    const H = container.clientHeight || 600;
-
-    const game = new ex.Engine({
-      canvasElement: (() => {
-        const c = document.createElement('canvas');
-        container.appendChild(c);
-        return c;
-      })(),
-      width:  W,
-      height: H,
-      displayMode: ex.DisplayMode.FillContainer,
-      backgroundColor: ex.Color.fromHex('#0a0b0f'),
-      antialiasing: false,
-    });
-
-    engineRef.current = game;
-
-    const scene = new ex.Scene();
-    game.addScene('main', scene);
-
-    const actor = new ex.Actor({
-      pos: ex.vec(W / 2, H / 2),
-      width:  300,
-      height: 300,
-      color:  ex.Color.fromHex('#3d7fff'),
-    });
-
-    actorRef.current = actor;
-    scene.add(actor);
-
-    game.start().then(() => {
-      game.goToScene('main');
-
-      // Create initial material
-      applyShader(PRESETS.plasma, game, actor);
-      setReady(true);
-
-      // FPS update
-      frameRef.current = setInterval(() => {
-        setFps(Math.round(game.stats.currFrame.fps));
-      }, 500);
-    });
-
-    return () => {
-      clearInterval(frameRef.current);
-      game.stop();
-    };
-  }, []);
-
-  // ── Apply shader to actor ─────────────────────────────────────────────────
-  const applyShader = useCallback((src, gameInst, actorInst) => {
-    const game  = gameInst  || engineRef.current;
-    const actor = actorInst || actorRef.current;
-    if (!game || !actor) return;
-
-    try {
-      // Dispose old material if any
-      if (materialRef.current) {
-        try { materialRef.current.dispose?.(); } catch (_) {}
-        materialRef.current = null;
-        actor.graphics.material = null;
+      // ─── Section component ────────────────────────────────────────────────────────
+      function Section({ title, badge, defaultOpen = true, children }) {
+        const [open, setOpen] = useState(defaultOpen);
+        return (
+          <div className="section">
+            <div className="section-head" onClick={() => setOpen(v => !v)}>
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {title}
+                {badge != null && badge > 0 && (
+                  <span
+                    style={{
+                      fontSize: 8,
+                      padding: "1px 5px",
+                      borderRadius: 2,
+                      background: "rgba(61,127,255,0.18)",
+                      color: "var(--accent)",
+                      border: "1px solid rgba(61,127,255,0.3)",
+                    }}
+                  >
+                    {badge}
+                  </span>
+                )}
+              </span>
+              <span className={`chevron ${open ? "open" : ""}`}>▶</span>
+            </div>
+            <div className={`section-body ${open ? "" : "hidden"}`}>{children}</div>
+          </div>
+        );
       }
 
-      const mat = game.graphicsContext.createMaterial({
-        name: `mat_${Date.now()}`,
-        fragmentSource: src,
-      });
-
-      materialRef.current      = mat;
-      actor.graphics.material  = mat;
-      setError('');
-      setCompiled(true);
-    } catch (e) {
-      setError(String(e?.message || e));
-      setCompiled(false);
-    }
-  }, []);
-
-  // ── Sync actor transform ──────────────────────────────────────────────────
-  useEffect(() => {
-    const actor = actorRef.current;
-    if (!actor) return;
-    const game = engineRef.current;
-    if (!game) return;
-    const W = game.drawWidth  || 800;
-    const H = game.drawHeight || 600;
-    actor.pos    = ex.vec(W / 2 + posX, H / 2 + posY);
-    actor.scale  = ex.vec(scale, scale);
-    actor.rotation = rot * (Math.PI / 180);
-  }, [posX, posY, scale, rot]);
-
-  // ── Preset select ─────────────────────────────────────────────────────────
-  const selectPreset = (name) => {
-    setPreset(name);
-    setShader(PRESETS[name]);
-    if (ready) applyShader(PRESETS[name]);
-  };
-
-  // ── Apply button ──────────────────────────────────────────────────────────
-  const handleApply = () => {
-    if (ready) applyShader(shader);
-  };
-
-  return (
-    <div className="layout">
-      {/* ── SIDEBAR ── */}
-      <div className="sidebar">
-        <div className="sidebar-header">
-          <div className="logo">
-            ExShaderLab <span className="logo-badge">EXCALIBUR</span>
+      // ─── Labeled slider ───────────────────────────────────────────────────────────
+      function Slider({ label, min, max, step = 0.01, value, onChange }) {
+        const decimals = step < 0.1 ? 2 : 0;
+        return (
+          <div className="slider-row">
+            <label>{label}</label>
+            <div className="slider-inner">
+              <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(parseFloat(e.target.value))} />
+              <span className="val-display">{value.toFixed(decimals)}</span>
+            </div>
           </div>
-        </div>
+        );
+      }
 
-        <div className="sidebar-body">
+      // ─── Custom uniform editor row ────────────────────────────────────────────────
+      function UniformRow({ name, type, values, onChange }) {
+        const n = compCount(type);
+        const isInt = type === "int" || type === "bool" || type.startsWith("ivec");
+        const isVec = n > 1;
+        const COMP = ["x", "y", "z", "w"];
 
-          {/* Shader Editor */}
-          <div className="shader-section">
-            <div className="shader-head">
-              <span>Fragment Shader</span>
-              <div className="shader-tabs">
-                {Object.keys(PRESETS).map(p => (
-                  <button key={p} className={`shader-tab ${preset === p ? 'active' : ''}`}
-                    onClick={() => selectPreset(p)}>{p}</button>
+        const set = (i, raw) => {
+          const v = isInt ? parseInt(raw, 10) || 0 : parseFloat(raw) || 0;
+          const next = [...values];
+          next[i] = v;
+          onChange(next);
+        };
+
+        return (
+          <div className="uniform-row">
+            <div className="uniform-label-row">
+              <span className={`type-badge ${isVec ? "vec" : ""}`}>{type}</span>
+              <span className="uniform-name">{name}</span>
+            </div>
+
+            {!isVec ? (
+              // scalar: slider + number input side by side
+              <div className="range-val">
+                <input
+                  type="range"
+                  min={type === "bool" ? 0 : -10}
+                  max={type === "bool" ? 1 : 10}
+                  step={isInt ? 1 : 0.001}
+                  value={values[0]}
+                  onChange={e => set(0, e.target.value)}
+                />
+                <input
+                  type="number"
+                  className="range-num"
+                  step={isInt ? 1 : 0.001}
+                  value={values[0]}
+                  onChange={e => set(0, e.target.value)}
+                />
+              </div>
+            ) : (
+              // vector: compact number inputs per component
+              <div className="uniform-inputs">
+                {Array.from({ length: n }, (_, i) => (
+                  <div key={i} className="field">
+                    <div className="comp-label">{COMP[i]}</div>
+                    <input type="number" step={isInt ? 1 : 0.001} value={values[i] ?? 0} onChange={e => set(i, e.target.value)} />
+                  </div>
                 ))}
               </div>
-            </div>
-            <textarea className="code" spellCheck={false}
-              value={shader}
-              onChange={e => { setShader(e.target.value); setCompiled(false); }}
-            />
-            <div className="shader-footer">
-              <button className="btn btn-primary" onClick={handleApply}>▶ Apply</button>
-              {error
-                ? <span style={{fontSize:9,color:'var(--red)'}}>✕ compile error</span>
-                : compiled
-                  ? <span className="ok-box">✓ compiled</span>
-                  : <span style={{fontSize:9,color:'var(--text-dim)'}}>pending</span>
-              }
-            </div>
-            {error && <div className="error-box" style={{margin:'0 10px 10px'}}>{error}</div>}
+            )}
           </div>
+        );
+      }
 
-          {/* Built-in uniforms info */}
-          <Section title="Built-in Uniforms" defaultOpen={false}>
-            {[
-              ['u_time_ms',          'float — ms since page load'],
-              ['u_resolution',       'vec2  — screen resolution'],
-              ['u_graphic_resolution','vec2  — graphic resolution'],
-              ['u_graphic',          'sampler2D — actor texture'],
-              ['v_uv',               'vec2  — UV [0..1] (in)'],
-            ].map(([n,d]) => (
-              <div key={n} style={{display:'flex',gap:6,alignItems:'baseline'}}>
-                <span style={{color:'var(--accent)',minWidth:140,fontSize:10}}>{n}</span>
-                <span style={{color:'var(--text-dim)',fontSize:9}}>{d}</span>
-              </div>
-            ))}
-          </Section>
+      // ─── App ──────────────────────────────────────────────────────────────────────
+      function App() {
+        const engineRef = useRef(null);
+        const actorRef = useRef(null);
+        const matRef = useRef(null);
+        const fpsTimer = useRef(null);
 
-          {/* Actor controls */}
-          <Section title="Actor Transform">
-            <div className="field-row">
-              <div className="field">
-                <label>Offset X</label>
-                <input type="number" value={posX}
-                  onChange={e => setPosX(+e.target.value)} step="10" />
+        const [ready, setReady] = useState(false);
+        const [fps, setFps] = useState(0);
+        const [src, setSrc] = useState(PRESETS.plasma);
+        const [preset, setPreset] = useState("plasma");
+        const [error, setError] = useState("");
+        const [compiled, setCompiled] = useState(false);
+
+        // Actor
+        const [posX, setPosX] = useState(0);
+        const [posY, setPosY] = useState(0);
+        const [scale, setScale] = useState(1.0);
+        const [rot, setRot] = useState(0);
+
+        // Sidebar resize
+        const [sidebarW, setSidebarW] = useState(340);
+        const [dragging, setDragging] = useState(false);
+        const dragRef = useRef({ startX: 0, startW: 340 });
+
+        // Custom uniforms map: name -> { type, values }
+        const [uniforms, setUniforms] = useState({});
+        const uniformsRef = useRef({});
+        useEffect(() => {
+          uniformsRef.current = uniforms;
+        }, [uniforms]);
+
+        // ── Parse custom uniforms from src ─────────────────────────────────────────
+        const parsed = useMemo(() => parseCustomUniforms(src), [src]);
+
+        // Sync parsed -> state, keeping existing values, seeding defaults for new ones
+        useEffect(() => {
+          setUniforms(prev => {
+            const next = {};
+            const presetDefs = PRESET_DEFAULTS[preset] || {};
+            for (const { type, name } of parsed) {
+              if (prev[name] && prev[name].type === type) {
+                next[name] = prev[name];
+              } else {
+                next[name] = { type, values: presetDefs[name] ? [...presetDefs[name]] : defaultForType(type) };
+              }
+            }
+            return next;
+          });
+        }, [parsed, preset]);
+
+        // ── Bootstrap Excalibur ────────────────────────────────────────────────────
+        useEffect(() => {
+          const container = document.getElementById("excalibur-root");
+          const W = container.clientWidth || 900;
+          const H = container.clientHeight || 600;
+
+          const canvas = document.createElement("canvas");
+          container.appendChild(canvas);
+
+          const game = new ex.Engine({
+            canvasElement: canvas,
+            width: W,
+            height: H,
+            displayMode: ex.DisplayMode.FillContainer,
+            backgroundColor: ex.Color.fromHex("#0a0b0f"),
+            antialiasing: false,
+          });
+          engineRef.current = game;
+
+          const scene = new ex.Scene();
+          game.addScene("main", scene);
+
+          const actor = new ex.Actor({
+            pos: ex.vec(W / 2, H / 2),
+            width: 300,
+            height: 300,
+            color: ex.Color.fromHex("#3d7fff"),
+          });
+          actorRef.current = actor;
+          scene.add(actor);
+
+          // Push custom uniforms into material each frame
+          scene.on("preupdate", () => {
+            const mat = matRef.current;
+            if (!mat) return;
+            const u = uniformsRef.current;
+            if (!Object.keys(u).length) return;
+            try {
+              mat.update(sh => {
+                for (const [nm, { type, values }] of Object.entries(u)) {
+                  pushUniform(sh, nm, type, values);
+                }
+              });
+            } catch (_) {}
+          });
+
+          game.start().then(() => {
+            game.goToScene("main");
+            compileMaterial(PRESETS.plasma, game, actor);
+            setReady(true);
+            fpsTimer.current = setInterval(() => {
+              setFps(Math.round(game.stats.currFrame.fps));
+            }, 500);
+          });
+
+          return () => {
+            clearInterval(fpsTimer.current);
+            game.stop();
+          };
+        }, []);
+
+        // ── Compile + assign material ──────────────────────────────────────────────
+        const compileMaterial = useCallback((fragSrc, gameInst, actorInst) => {
+          const game = gameInst || engineRef.current;
+          const actor = actorInst || actorRef.current;
+          if (!game || !actor) return;
+          try {
+            if (matRef.current) {
+              try {
+                matRef.current.dispose?.();
+              } catch (_) {}
+              matRef.current = null;
+              actor.graphics.material = null;
+            }
+            const mat = game.graphicsContext.createMaterial({
+              name: `mat_${Date.now()}`,
+              fragmentSource: fragSrc,
+            });
+            matRef.current = mat;
+            actor.graphics.material = mat;
+            setError("");
+            setCompiled(true);
+          } catch (e) {
+            setError(String(e?.message || e));
+            setCompiled(false);
+          }
+        }, []);
+
+        // ── Actor transform ─────────────────────────────────────────────────────────
+        useEffect(() => {
+          const actor = actorRef.current;
+          const game = engineRef.current;
+          if (!actor || !game) return;
+          const W = game.drawWidth || 900;
+          const H = game.drawHeight || 600;
+          actor.pos = ex.vec(W / 2 + posX, H / 2 + posY);
+          actor.scale = ex.vec(scale, scale);
+          actor.rotation = rot * (Math.PI / 180);
+        }, [posX, posY, scale, rot]);
+
+        // ── Preset switch ───────────────────────────────────────────────────────────
+        const selectPreset = name => {
+          setPreset(name);
+          setSrc(PRESETS[name]);
+          setCompiled(false);
+          if (ready) compileMaterial(PRESETS[name]);
+        };
+
+        // ── Drag resize ─────────────────────────────────────────────────────────────
+        const onDragStart = e => {
+          dragRef.current = { startX: e.clientX, startW: sidebarW };
+          setDragging(true);
+        };
+
+        useEffect(() => {
+          if (!dragging) return;
+          const onMove = e => {
+            const delta = e.clientX - dragRef.current.startX;
+            setSidebarW(Math.max(220, Math.min(600, dragRef.current.startW + delta)));
+          };
+          const onUp = () => setDragging(false);
+          window.addEventListener("mousemove", onMove);
+          window.addEventListener("mouseup", onUp);
+          return () => {
+            window.removeEventListener("mousemove", onMove);
+            window.removeEventListener("mouseup", onUp);
+          };
+        }, [dragging]);
+
+        // ── Uniform update helper ───────────────────────────────────────────────────
+        const updateUniform = useCallback((name, vals) => {
+          setUniforms(prev => ({ ...prev, [name]: { ...prev[name], values: vals } }));
+        }, []);
+
+        const uniformEntries = Object.entries(uniforms);
+
+        return (
+          <div className="layout">
+            {dragging && <div className="drag-overlay" />}
+
+            {/* ── SIDEBAR ── */}
+            <div className="sidebar" style={{ width: sidebarW }}>
+              <div className={`resize-handle ${dragging ? "dragging" : ""}`} onMouseDown={onDragStart} />
+
+              <div className="sidebar-header">
+                <div className="logo">
+                  ExShaderLab <span className="logo-badge">EXCALIBUR</span>
+                </div>
               </div>
-              <div className="field">
-                <label>Offset Y</label>
-                <input type="number" value={posY}
-                  onChange={e => setPosY(+e.target.value)} step="10" />
+
+              <div className="sidebar-body">
+                {/* Shader editor */}
+                <div className="shader-section">
+                  <div className="shader-head">
+                    <span>Fragment Shader</span>
+                    <div className="shader-tabs">
+                      {Object.keys(PRESETS).map(p => (
+                        <button key={p} className={`shader-tab ${preset === p ? "active" : ""}`} onClick={() => selectPreset(p)}>
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <textarea
+                    className="code"
+                    spellCheck={false}
+                    value={src}
+                    onChange={e => {
+                      setSrc(e.target.value);
+                      setCompiled(false);
+                    }}
+                  />
+                  <div className="shader-footer">
+                    <button className="btn btn-primary" onClick={() => ready && compileMaterial(src)}>
+                      ▶ Apply
+                    </button>
+                    {error ? (
+                      <span style={{ fontSize: 9, color: "var(--red)" }}>✕ compile error</span>
+                    ) : compiled ? (
+                      <span className="ok-box">✓ compiled</span>
+                    ) : (
+                      <span style={{ fontSize: 9, color: "var(--text-dim)" }}>pending</span>
+                    )}
+                  </div>
+                  {error && (
+                    <div className="error-box" style={{ margin: "0 10px 10px" }}>
+                      {error}
+                    </div>
+                  )}
+                </div>
+
+                {/* ── CUSTOM UNIFORMS ── */}
+                <Section title="Custom Uniforms" badge={uniformEntries.length} defaultOpen={true}>
+                  {uniformEntries.length === 0 ? (
+                    <div className="no-uniforms">
+                      No custom uniforms detected.
+                      <br />
+                      <span style={{ fontSize: 9 }}>
+                        Declare <code style={{ color: "var(--accent)" }}>uniform float u_myVar;</code>
+                        <br />
+                        in your shader (non-built-in), then hit Apply.
+                      </span>
+                    </div>
+                  ) : (
+                    uniformEntries.map(([name, { type, values }]) => (
+                      <UniformRow key={name} name={name} type={type} values={values} onChange={v => updateUniform(name, v)} />
+                    ))
+                  )}
+                </Section>
+
+                {/* Built-in reference */}
+                <Section title="Built-in Uniforms" defaultOpen={false}>
+                  {[
+                    ["float", "u_time_ms", "ms since page load"],
+                    ["vec2", "u_resolution", "screen size"],
+                    ["vec2", "u_graphic_resolution", "graphic size"],
+                    ["sampler2D", "u_graphic", "actor texture"],
+                    ["vec4", "u_color", "material color"],
+                    ["float", "u_opacity", "graphic opacity"],
+                    ["vec2", "v_uv", "UV coords (in)"],
+                  ].map(([t, n, d]) => (
+                    <div key={n} style={{ display: "flex", gap: 5, alignItems: "baseline", flexWrap: "wrap" }}>
+                      <span className={`type-badge ${/vec/.test(t) ? "vec" : ""}`}>{t}</span>
+                      <span style={{ color: "var(--accent)", fontSize: 10, fontWeight: 600 }}>{n}</span>
+                      <span style={{ color: "var(--text-dim)", fontSize: 9 }}>{d}</span>
+                    </div>
+                  ))}
+                </Section>
+
+                {/* Actor transform */}
+                <Section title="Actor Transform">
+                  <div className="field-row">
+                    <div className="field">
+                      <label>Offset X</label>
+                      <input type="number" value={posX} step="10" onChange={e => setPosX(+e.target.value)} />
+                    </div>
+                    <div className="field">
+                      <label>Offset Y</label>
+                      <input type="number" value={posY} step="10" onChange={e => setPosY(+e.target.value)} />
+                    </div>
+                  </div>
+                  <Slider label="Scale" min={0.1} max={4} step={0.05} value={scale} onChange={setScale} />
+                  <Slider label="Rotation (deg)" min={-180} max={180} step={1} value={rot} onChange={setRot} />
+                </Section>
+
+                {/* Debug */}
+                <Section title="Debug">
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <div className="stat-chip">
+                      FPS <span>{fps}</span>
+                    </div>
+                    <div className="stat-chip">
+                      Engine <span>{ready ? "running" : "init…"}</span>
+                    </div>
+                    <div className="stat-chip">
+                      Shader{" "}
+                      <span style={{ color: error ? "var(--red)" : "var(--green)" }}>{error ? "error" : compiled ? "ok" : "—"}</span>
+                    </div>
+                    <div className="stat-chip">
+                      Sidebar <span>{sidebarW}px</span>
+                    </div>
+                  </div>
+                </Section>
               </div>
             </div>
-            <Slider label="Scale" min={0.1} max={4} step={0.05} value={scale} onChange={setScale} />
-            <Slider label="Rotation (deg)" min={-180} max={180} step={1} value={rot} onChange={setRot} />
-          </Section>
 
-          {/* Debug */}
-          <Section title="Debug" defaultOpen={true}>
-            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-              <div className="stat-chip">FPS <span>{fps}</span></div>
-              <div className="stat-chip">Engine <span>{ready ? 'running' : 'init…'}</span></div>
-              <div className="stat-chip">Shader <span style={{color: error ? 'var(--red)' : 'var(--green)'}}>
-                {error ? 'error' : compiled ? 'ok' : '—'}
-              </span></div>
+            {/* ── CANVAS ── */}
+            <div className="canvas-wrap">
+              <div id="excalibur-root" />
+              <div className="debug-bar">
+                <div className="stat-chip">
+                  {fps} <span>fps</span>
+                </div>
+                <div className="stat-chip">
+                  ExcaliburJS <span>0.29</span>
+                </div>
+              </div>
             </div>
-          </Section>
+          </div>
+        );
+      }
 
-        </div>
-      </div>
-
-      {/* ── CANVAS ── */}
-      <div className="canvas-wrap">
-        <div id="excalibur-root" />
-        <div className="debug-bar">
-          <div className="stat-chip">{fps} <span>fps</span></div>
-          <div className="stat-chip">ExcaliburJS <span>0.29</span></div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-</script>
-</body>
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
 </html>
