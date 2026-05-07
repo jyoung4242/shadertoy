@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ExShaderLab</title>
-    <script src="https://unpkg.com/excalibur@0.32.0/build/dist/excalibur.min.js"></script>
+    <script src="https://unpkg.com/excalibur@0.29.3/build/dist/excalibur.min.js"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -67,7 +67,6 @@
         position: relative;
       }
 
-      /* Drag handle strip on right edge */
       .resize-handle {
         position: absolute;
         top: 0;
@@ -88,9 +87,7 @@
         height: 40px;
         border-radius: 1px;
         background: var(--border2);
-        transition:
-          background 0.15s,
-          height 0.15s;
+        transition: background 0.15s, height 0.15s;
       }
 
       .resize-handle:hover::after,
@@ -99,7 +96,6 @@
         height: 60px;
       }
 
-      /* Full-window overlay while dragging keeps cursor correct over canvas */
       .drag-overlay {
         position: fixed;
         inset: 0;
@@ -144,16 +140,9 @@
         gap: 10px;
       }
 
-      .sidebar-body::-webkit-scrollbar {
-        width: 4px;
-      }
-      .sidebar-body::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      .sidebar-body::-webkit-scrollbar-thumb {
-        background: var(--border2);
-        border-radius: 2px;
-      }
+      .sidebar-body::-webkit-scrollbar { width: 4px; }
+      .sidebar-body::-webkit-scrollbar-track { background: transparent; }
+      .sidebar-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
       /* ── SECTIONS ── */
       .section {
@@ -178,41 +167,17 @@
         user-select: none;
       }
 
-      .section-head:hover {
-        color: var(--text);
-      }
-      .section-head .chevron {
-        transition: transform 0.2s;
-        font-size: 8px;
-      }
-      .section-head .chevron.open {
-        transform: rotate(90deg);
-      }
+      .section-head:hover { color: var(--text); }
+      .section-head .chevron { transition: transform 0.2s; font-size: 8px; }
+      .section-head .chevron.open { transform: rotate(90deg); }
 
-      .section-body {
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-      .section-body.hidden {
-        display: none;
-      }
+      .section-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+      .section-body.hidden { display: none; }
 
       /* ── FORM CONTROLS ── */
-      .field {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-      }
-      .field-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .field-row .field {
-        flex: 1;
-      }
+      .field { display: flex; flex-direction: column; gap: 3px; }
+      .field-row { display: flex; align-items: center; gap: 6px; }
+      .field-row .field { flex: 1; }
 
       label {
         font-size: 9px;
@@ -242,9 +207,7 @@
         transition: transform 0.1s;
       }
 
-      input[type="range"]::-webkit-slider-thumb:hover {
-        transform: scale(1.3);
-      }
+      input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
 
       input[type="number"],
       input[type="text"] {
@@ -261,9 +224,7 @@
       }
 
       input[type="number"]:focus,
-      input[type="text"]:focus {
-        border-color: var(--accent);
-      }
+      input[type="text"]:focus { border-color: var(--accent); }
 
       /* ── SHADER EDITOR ── */
       .shader-section {
@@ -293,11 +254,7 @@
         gap: 4px;
       }
 
-      .shader-tabs {
-        display: flex;
-        gap: 4px;
-        flex-wrap: wrap;
-      }
+      .shader-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
 
       .shader-tab {
         font-size: 8px;
@@ -312,17 +269,9 @@
         transition: all 0.15s;
       }
 
-      .shader-tab.active {
-        background: var(--accent);
-        color: #fff;
-      }
+      .shader-tab.active { background: var(--accent); color: #fff; }
 
-      /* Scratch tab is dashed/outlined to signal it's a blank slate */
-      .shader-tab.scratch-tab {
-        border: 1px dashed var(--border2);
-        background: transparent;
-      }
-
+      .shader-tab.scratch-tab { border: 1px dashed var(--border2); background: transparent; }
       .shader-tab.scratch-tab.active {
         border: 1px dashed var(--accent);
         background: rgba(61, 127, 255, 0.12);
@@ -368,13 +317,22 @@
         transition: all 0.15s;
       }
 
-      .btn-primary {
-        background: var(--accent);
-        color: #fff;
+      .btn-primary { background: var(--accent); color: #fff; }
+      .btn-primary:hover { background: #5590ff; }
+
+      .btn-ghost {
+        background: transparent;
+        color: var(--text-dim);
+        border: 1px solid var(--border2);
       }
-      .btn-primary:hover {
-        background: #5590ff;
+      .btn-ghost:hover { color: var(--text); border-color: var(--text-dim); }
+
+      .btn-danger {
+        background: transparent;
+        color: var(--red);
+        border: 1px solid rgba(255,77,106,0.35);
       }
+      .btn-danger:hover { background: rgba(255,77,106,0.1); }
 
       /* ── ERROR ── */
       .error-box {
@@ -389,13 +347,7 @@
         word-break: break-all;
       }
 
-      .ok-box {
-        color: var(--green);
-        font-size: 10px;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-      }
+      .ok-box { color: var(--green); font-size: 10px; display: flex; align-items: center; gap: 4px; }
 
       /* ── CUSTOM UNIFORMS ── */
       .uniform-row {
@@ -408,11 +360,7 @@
         border-radius: 5px;
       }
 
-      .uniform-label-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
+      .uniform-label-row { display: flex; align-items: center; gap: 6px; }
 
       .type-badge {
         font-size: 8px;
@@ -439,33 +387,14 @@
         text-overflow: ellipsis;
       }
 
-      .uniform-inputs {
-        display: flex;
-        gap: 4px;
-      }
-      .uniform-inputs .field {
-        flex: 1;
-      }
+      .uniform-inputs { display: flex; gap: 4px; }
+      .uniform-inputs .field { flex: 1; }
 
-      .comp-label {
-        font-size: 8px;
-        color: var(--text-dim);
-        text-align: center;
-        margin-bottom: 1px;
-      }
+      .comp-label { font-size: 8px; color: var(--text-dim); text-align: center; margin-bottom: 1px; }
 
-      .range-val {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .range-val input[type="range"] {
-        flex: 1;
-      }
-      .range-num {
-        width: 52px;
-        flex-shrink: 0;
-      }
+      .range-val { display: flex; align-items: center; gap: 6px; }
+      .range-val input[type="range"] { flex: 1; }
+      .range-num { width: 52px; flex-shrink: 0; }
 
       .no-uniforms {
         font-size: 10px;
@@ -476,6 +405,78 @@
         line-height: 1.8;
       }
 
+      /* ── SPRITE DROP ZONE ── */
+      .sprite-drop-zone {
+        border: 1px dashed var(--border2);
+        border-radius: 5px;
+        padding: 14px 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s;
+        color: var(--text-dim);
+        font-size: 10px;
+        line-height: 1.7;
+        position: relative;
+      }
+
+      .sprite-drop-zone:hover,
+      .sprite-drop-zone.drag-over {
+        border-color: var(--accent);
+        background: rgba(61,127,255,0.06);
+        color: var(--text);
+      }
+
+      .sprite-drop-zone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+      }
+
+      .sprite-loaded {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+      }
+
+      .sprite-thumb {
+        width: 36px;
+        height: 36px;
+        object-fit: contain;
+        border-radius: 3px;
+        background: var(--border2);
+        flex-shrink: 0;
+        image-rendering: pixelated;
+      }
+
+      .sprite-info {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .sprite-name {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .sprite-dims {
+        font-size: 9px;
+        color: var(--text-dim);
+      }
+
       /* ── CANVAS ── */
       .canvas-wrap {
         flex: 1;
@@ -484,14 +485,26 @@
         background: var(--bg);
       }
 
-      #excalibur-root {
+      #excalibur-root { position: absolute; inset: 0; }
+      #excalibur-root canvas { display: block; width: 100% !important; height: 100% !important; }
+
+      /* Canvas drag-over highlight */
+      .canvas-wrap.canvas-drag-over::after {
+        content: "Drop image to load as sprite";
         position: absolute;
         inset: 0;
-      }
-      #excalibur-root canvas {
-        display: block;
-        width: 100% !important;
-        height: 100% !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--mono);
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--accent);
+        background: rgba(10,11,15,0.75);
+        border: 2px dashed var(--accent);
+        border-radius: 4px;
+        pointer-events: none;
+        letter-spacing: 0.5px;
       }
 
       /* ── DEBUG BAR ── */
@@ -517,37 +530,15 @@
         align-items: center;
       }
 
-      .stat-chip span {
-        color: var(--green);
-        font-weight: 600;
-      }
+      .stat-chip span { color: var(--green); font-weight: 600; }
 
-      /* Slider with inline value */
-      .slider-row {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-      }
-      .slider-inner {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .slider-inner input[type="range"] {
-        flex: 1;
-      }
-      .val-display {
-        width: 38px;
-        text-align: right;
-        color: var(--accent);
-        font-size: 10px;
-        font-weight: 600;
-      }
+      /* Slider */
+      .slider-row { display: flex; flex-direction: column; gap: 3px; }
+      .slider-inner { display: flex; align-items: center; gap: 6px; }
+      .slider-inner input[type="range"] { flex: 1; }
+      .val-display { width: 38px; text-align: right; color: var(--accent); font-size: 10px; font-weight: 600; }
 
-      * {
-        scrollbar-width: thin;
-        scrollbar-color: var(--border2) transparent;
-      }
+      * { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
     </style>
   </head>
   <body>
@@ -556,20 +547,11 @@
     <script type="text/babel">
       const { useState, useEffect, useRef, useCallback, useMemo } = React;
 
-      // ─── Built-in uniforms Excalibur injects automatically ───────────────────────
       const BUILTINS = new Set([
-        "u_time_ms",
-        "u_resolution",
-        "u_graphic_resolution",
-        "u_graphic",
-        "u_color",
-        "u_opacity",
-        "u_size",
-        "u_screen_size",
-        "u_graphic_origin",
+        "u_time_ms","u_resolution","u_graphic_resolution","u_graphic",
+        "u_color","u_opacity","u_size","u_screen_size","u_graphic_origin",
       ]);
 
-      // ─── Parse non-builtin uniform declarations from GLSL source ─────────────────
       function parseCustomUniforms(src) {
         const rx = /^\s*uniform\s+(float|int|bool|vec[234]|ivec[234])\s+(\w+)\s*;/gm;
         const out = [];
@@ -609,7 +591,7 @@
         } catch (_) {}
       }
 
-      // ─── Presets ──────────────────────────────────────────────────────────────────
+      // ─── Presets ─────────────────────────────────────────────────────────────────
       const PRESETS = {
         scratch: `#version 300 es
 precision mediump float;
@@ -721,13 +703,12 @@ void main() {
 }`,
       };
 
-      // Default values for preset custom uniforms so they open with sensible numbers
       const PRESET_DEFAULTS = {
         ripple: { u_wave_speed: [1.0], u_wave_freq: [30.0], u_wave_amp: [0.015] },
         voronoi: { u_cell_scale: [5.0], u_anim_speed: [1.0], u_edge_color: [0.1, 0.1, 0.4] },
       };
 
-      // ─── Section component ────────────────────────────────────────────────────────
+      // ─── Section ─────────────────────────────────────────────────────────────────
       function Section({ title, badge, defaultOpen = true, children }) {
         const [open, setOpen] = useState(defaultOpen);
         return (
@@ -736,18 +717,11 @@ void main() {
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 {title}
                 {badge != null && badge > 0 && (
-                  <span
-                    style={{
-                      fontSize: 8,
-                      padding: "1px 5px",
-                      borderRadius: 2,
-                      background: "rgba(61,127,255,0.18)",
-                      color: "var(--accent)",
-                      border: "1px solid rgba(61,127,255,0.3)",
-                    }}
-                  >
-                    {badge}
-                  </span>
+                  <span style={{
+                    fontSize: 8, padding: "1px 5px", borderRadius: 2,
+                    background: "rgba(61,127,255,0.18)", color: "var(--accent)",
+                    border: "1px solid rgba(61,127,255,0.3)",
+                  }}>{badge}</span>
                 )}
               </span>
               <span className={`chevron ${open ? "open" : ""}`}>▶</span>
@@ -757,21 +731,22 @@ void main() {
         );
       }
 
-      // ─── Labeled slider ───────────────────────────────────────────────────────────
+      // ─── Slider ──────────────────────────────────────────────────────────────────
       function Slider({ label, min, max, step = 0.01, value, onChange }) {
         const decimals = step < 0.1 ? 2 : 0;
         return (
           <div className="slider-row">
             <label>{label}</label>
             <div className="slider-inner">
-              <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(parseFloat(e.target.value))} />
+              <input type="range" min={min} max={max} step={step} value={value}
+                onChange={e => onChange(parseFloat(e.target.value))} />
               <span className="val-display">{value.toFixed(decimals)}</span>
             </div>
           </div>
         );
       }
 
-      // ─── Custom uniform editor row ────────────────────────────────────────────────
+      // ─── Uniform row ─────────────────────────────────────────────────────────────
       function UniformRow({ name, type, values, onChange }) {
         const n = compCount(type);
         const isInt = type === "int" || type === "bool" || type.startsWith("ivec");
@@ -780,9 +755,7 @@ void main() {
 
         const set = (i, raw) => {
           const v = isInt ? parseInt(raw, 10) || 0 : parseFloat(raw) || 0;
-          const next = [...values];
-          next[i] = v;
-          onChange(next);
+          const next = [...values]; next[i] = v; onChange(next);
         };
 
         return (
@@ -791,33 +764,23 @@ void main() {
               <span className={`type-badge ${isVec ? "vec" : ""}`}>{type}</span>
               <span className="uniform-name">{name}</span>
             </div>
-
             {!isVec ? (
-              // scalar: slider + number input side by side
               <div className="range-val">
-                <input
-                  type="range"
-                  min={type === "bool" ? 0 : -10}
-                  max={type === "bool" ? 1 : 10}
-                  step={isInt ? 1 : 0.001}
-                  value={values[0]}
-                  onChange={e => set(0, e.target.value)}
-                />
-                <input
-                  type="number"
-                  className="range-num"
-                  step={isInt ? 1 : 0.001}
-                  value={values[0]}
-                  onChange={e => set(0, e.target.value)}
-                />
+                <input type="range"
+                  min={type === "bool" ? 0 : -10} max={type === "bool" ? 1 : 10}
+                  step={isInt ? 1 : 0.001} value={values[0]}
+                  onChange={e => set(0, e.target.value)} />
+                <input type="number" className="range-num"
+                  step={isInt ? 1 : 0.001} value={values[0]}
+                  onChange={e => set(0, e.target.value)} />
               </div>
             ) : (
-              // vector: compact number inputs per component
               <div className="uniform-inputs">
                 {Array.from({ length: n }, (_, i) => (
                   <div key={i} className="field">
                     <div className="comp-label">{COMP[i]}</div>
-                    <input type="number" step={isInt ? 1 : 0.001} value={values[i] ?? 0} onChange={e => set(i, e.target.value)} />
+                    <input type="number" step={isInt ? 1 : 0.001}
+                      value={values[i] ?? 0} onChange={e => set(i, e.target.value)} />
                   </div>
                 ))}
               </div>
@@ -826,42 +789,44 @@ void main() {
         );
       }
 
-      // ─── App ──────────────────────────────────────────────────────────────────────
+      // ─── App ─────────────────────────────────────────────────────────────────────
       function App() {
-        const engineRef = useRef(null);
-        const actorRef = useRef(null);
-        const matRef = useRef(null);
-        const fpsTimer = useRef(null);
+        const engineRef   = useRef(null);
+        const actorRef    = useRef(null);
+        const matRef      = useRef(null);
+        const imgSrcRef   = useRef(null); // current ex.ImageSource
+        const fpsTimer    = useRef(null);
 
-        const [ready, setReady] = useState(false);
-        const [fps, setFps] = useState(0);
-        const [src, setSrc] = useState(PRESETS.plasma);
-        const [preset, setPreset] = useState("plasma");
-        const [error, setError] = useState("");
+        const [ready,    setReady]    = useState(false);
+        const [fps,      setFps]      = useState(0);
+        const [src,      setSrc]      = useState(PRESETS.plasma);
+        const [preset,   setPreset]   = useState("plasma");
+        const [error,    setError]    = useState("");
         const [compiled, setCompiled] = useState(false);
 
-        // Actor
-        const [posX, setPosX] = useState(0);
-        const [posY, setPosY] = useState(0);
+        // Actor transform
+        const [posX,  setPosX]  = useState(0);
+        const [posY,  setPosY]  = useState(0);
         const [scale, setScale] = useState(1.0);
-        const [rot, setRot] = useState(0);
+        const [rot,   setRot]   = useState(0);
 
         // Sidebar resize
         const [sidebarW, setSidebarW] = useState(340);
         const [dragging, setDragging] = useState(false);
         const dragRef = useRef({ startX: 0, startW: 340 });
 
-        // Custom uniforms map: name -> { type, values }
+        // Sprite state
+        const [spriteFile, setSpriteFile] = useState(null);
+        // { name, dataUrl, width, height }
+        const [canvasDragOver, setCanvasDragOver] = useState(false);
+
+        // Custom uniforms
         const [uniforms, setUniforms] = useState({});
         const uniformsRef = useRef({});
-        useEffect(() => {
-          uniformsRef.current = uniforms;
-        }, [uniforms]);
+        useEffect(() => { uniformsRef.current = uniforms; }, [uniforms]);
 
-        // ── Parse custom uniforms from src ─────────────────────────────────────────
         const parsed = useMemo(() => parseCustomUniforms(src), [src]);
 
-        // Sync parsed -> state, keeping existing values, seeding defaults for new ones
         useEffect(() => {
           setUniforms(prev => {
             const next = {};
@@ -877,10 +842,10 @@ void main() {
           });
         }, [parsed, preset]);
 
-        // ── Bootstrap Excalibur ────────────────────────────────────────────────────
+        // ── Bootstrap Excalibur ──────────────────────────────────────────────────
         useEffect(() => {
           const container = document.getElementById("excalibur-root");
-          const W = container.clientWidth || 900;
+          const W = container.clientWidth  || 900;
           const H = container.clientHeight || 600;
 
           const canvas = document.createElement("canvas");
@@ -888,8 +853,7 @@ void main() {
 
           const game = new ex.Engine({
             canvasElement: canvas,
-            width: W,
-            height: H,
+            width: W, height: H,
             displayMode: ex.DisplayMode.FillContainer,
             backgroundColor: ex.Color.fromHex("#0a0b0f"),
             antialiasing: false,
@@ -901,14 +865,12 @@ void main() {
 
           const actor = new ex.Actor({
             pos: ex.vec(W / 2, H / 2),
-            width: 300,
-            height: 300,
+            width: 300, height: 300,
             color: ex.Color.fromHex("#3d7fff"),
           });
           actorRef.current = actor;
           scene.add(actor);
 
-          // Push custom uniforms into material each frame
           scene.on("preupdate", () => {
             const mat = matRef.current;
             if (!mat) return;
@@ -938,16 +900,16 @@ void main() {
           };
         }, []);
 
-        // ── Compile + assign material ──────────────────────────────────────────────
+        // ── Compile + assign material ────────────────────────────────────────────
+        // After calling graphics.use() for a sprite, Excalibur resets the material,
+        // so compileMaterial always re-assigns it after the graphic is set.
         const compileMaterial = useCallback((fragSrc, gameInst, actorInst) => {
-          const game = gameInst || engineRef.current;
+          const game  = gameInst  || engineRef.current;
           const actor = actorInst || actorRef.current;
           if (!game || !actor) return;
           try {
             if (matRef.current) {
-              try {
-                matRef.current.dispose?.();
-              } catch (_) {}
+              try { matRef.current.dispose?.(); } catch (_) {}
               matRef.current = null;
               actor.graphics.material = null;
             }
@@ -957,37 +919,106 @@ void main() {
             });
             matRef.current = mat;
             actor.graphics.material = mat;
-            setError("");
-            setCompiled(true);
+            setError(""); setCompiled(true);
           } catch (e) {
-            setError(String(e?.message || e));
-            setCompiled(false);
+            setError(String(e?.message || e)); setCompiled(false);
           }
         }, []);
 
-        // ── Actor transform ─────────────────────────────────────────────────────────
+        // ── Load sprite from data URL ─────────────────────────────────────────────
+        // Creates an ex.ImageSource from the data URL, loads it, switches the
+        // actor graphic to the resulting sprite, then re-applies the material.
+        const loadSprite = useCallback(async (dataUrl, fileName, imgEl) => {
+          const game  = engineRef.current;
+          const actor = actorRef.current;
+          if (!game || !actor) return;
+
+          // Dispose previous ImageSource if any
+          if (imgSrcRef.current) {
+            try { imgSrcRef.current.unload?.(); } catch (_) {}
+            imgSrcRef.current = null;
+          }
+
+          try {
+            const imageSource = new ex.ImageSource(dataUrl);
+            await imageSource.load();
+            imgSrcRef.current = imageSource;
+
+            const sprite = imageSource.toSprite();
+            actor.graphics.use(sprite);
+
+            // Re-apply material — graphics.use() clears it
+            if (matRef.current) {
+              actor.graphics.material = matRef.current;
+            }
+
+            setSpriteFile({
+              name: fileName,
+              dataUrl,
+              width:  imgEl.naturalWidth,
+              height: imgEl.naturalHeight,
+            });
+          } catch (e) {
+            console.error("Sprite load failed:", e);
+          }
+        }, []);
+
+        // ── Clear sprite — revert to solid color rectangle ───────────────────────
+        const clearSprite = useCallback(() => {
+          const actor = actorRef.current;
+          if (!actor) return;
+
+          if (imgSrcRef.current) {
+            try { imgSrcRef.current.unload?.(); } catch (_) {}
+            imgSrcRef.current = null;
+          }
+
+          // Restore a solid-color rectangle graphic
+          actor.graphics.use(new ex.Rectangle({
+            width: 300, height: 300,
+            color: ex.Color.fromHex("#3d7fff"),
+          }));
+
+          // Re-apply material
+          if (matRef.current) {
+            actor.graphics.material = matRef.current;
+          }
+
+          setSpriteFile(null);
+        }, []);
+
+        // ── Handle a File object (from drop or input) ────────────────────────────
+        const handleImageFile = useCallback((file) => {
+          if (!file || !file.type.startsWith("image/")) return;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const dataUrl = e.target.result;
+            const img = new Image();
+            img.onload = () => loadSprite(dataUrl, file.name, img);
+            img.src = dataUrl;
+          };
+          reader.readAsDataURL(file);
+        }, [loadSprite]);
+
+        // ── Actor transform ──────────────────────────────────────────────────────
         useEffect(() => {
           const actor = actorRef.current;
-          const game = engineRef.current;
+          const game  = engineRef.current;
           if (!actor || !game) return;
-          const W = game.drawWidth || 900;
+          const W = game.drawWidth  || 900;
           const H = game.drawHeight || 600;
-          actor.pos = ex.vec(W / 2 + posX, H / 2 + posY);
-          actor.scale = ex.vec(scale, scale);
+          actor.pos      = ex.vec(W / 2 + posX, H / 2 + posY);
+          actor.scale    = ex.vec(scale, scale);
           actor.rotation = rot * (Math.PI / 180);
         }, [posX, posY, scale, rot]);
 
-        // ── Preset switch ───────────────────────────────────────────────────────────
+        // ── Preset switch ────────────────────────────────────────────────────────
         const selectPreset = name => {
-          setPreset(name);
-          setSrc(PRESETS[name]);
-          setCompiled(false);
-          // scratch is a blank template — load it into the editor but don't
-          // auto-compile; let the user write their shader then hit Apply.
+          setPreset(name); setSrc(PRESETS[name]); setCompiled(false);
           if (ready && name !== "scratch") compileMaterial(PRESETS[name]);
         };
 
-        // ── Drag resize ─────────────────────────────────────────────────────────────
+        // ── Sidebar drag resize ──────────────────────────────────────────────────
         const onDragStart = e => {
           dragRef.current = { startX: e.clientX, startW: sidebarW };
           setDragging(true);
@@ -1001,17 +1032,31 @@ void main() {
           };
           const onUp = () => setDragging(false);
           window.addEventListener("mousemove", onMove);
-          window.addEventListener("mouseup", onUp);
+          window.addEventListener("mouseup",   onUp);
           return () => {
             window.removeEventListener("mousemove", onMove);
-            window.removeEventListener("mouseup", onUp);
+            window.removeEventListener("mouseup",   onUp);
           };
         }, [dragging]);
 
-        // ── Uniform update helper ───────────────────────────────────────────────────
+        // ── Uniform update ───────────────────────────────────────────────────────
         const updateUniform = useCallback((name, vals) => {
           setUniforms(prev => ({ ...prev, [name]: { ...prev[name], values: vals } }));
         }, []);
+
+        // ── Canvas drag-and-drop handlers ────────────────────────────────────────
+        const onCanvasDragOver = e => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "copy";
+          setCanvasDragOver(true);
+        };
+        const onCanvasDragLeave = () => setCanvasDragOver(false);
+        const onCanvasDrop = e => {
+          e.preventDefault();
+          setCanvasDragOver(false);
+          const file = e.dataTransfer.files?.[0];
+          if (file) handleImageFile(file);
+        };
 
         const uniformEntries = Object.entries(uniforms);
 
@@ -1030,6 +1075,7 @@ void main() {
               </div>
 
               <div className="sidebar-body">
+
                 {/* Shader editor */}
                 <div className="shader-section">
                   <div className="shader-head">
@@ -1047,35 +1093,61 @@ void main() {
                       ))}
                     </div>
                   </div>
-                  <textarea
-                    className="code"
-                    spellCheck={false}
-                    value={src}
-                    onChange={e => {
-                      setSrc(e.target.value);
-                      setCompiled(false);
-                    }}
-                  />
+                  <textarea className="code" spellCheck={false} value={src}
+                    onChange={e => { setSrc(e.target.value); setCompiled(false); }} />
                   <div className="shader-footer">
-                    <button className="btn btn-primary" onClick={() => ready && compileMaterial(src)}>
-                      ▶ Apply
-                    </button>
-                    {error ? (
-                      <span style={{ fontSize: 9, color: "var(--red)" }}>✕ compile error</span>
-                    ) : compiled ? (
-                      <span className="ok-box">✓ compiled</span>
-                    ) : (
-                      <span style={{ fontSize: 9, color: "var(--text-dim)" }}>pending</span>
-                    )}
+                    <button className="btn btn-primary" onClick={() => ready && compileMaterial(src)}>▶ Apply</button>
+                    {error
+                      ? <span style={{ fontSize: 9, color: "var(--red)" }}>✕ compile error</span>
+                      : compiled
+                        ? <span className="ok-box">✓ compiled</span>
+                        : <span style={{ fontSize: 9, color: "var(--text-dim)" }}>pending</span>
+                    }
                   </div>
-                  {error && (
-                    <div className="error-box" style={{ margin: "0 10px 10px" }}>
-                      {error}
-                    </div>
-                  )}
+                  {error && <div className="error-box" style={{ margin: "0 10px 10px" }}>{error}</div>}
                 </div>
 
-                {/* ── CUSTOM UNIFORMS ── */}
+                {/* ── SPRITE LOADER ── */}
+                <Section title="Sprite" defaultOpen={true}>
+                  {spriteFile ? (
+                    <div>
+                      <div className="sprite-loaded">
+                        <img className="sprite-thumb" src={spriteFile.dataUrl} alt={spriteFile.name} />
+                        <div className="sprite-info">
+                          <div className="sprite-name">{spriteFile.name}</div>
+                          <div className="sprite-dims">{spriteFile.width} × {spriteFile.height}px</div>
+                        </div>
+                        <button className="btn btn-danger" onClick={clearSprite} title="Remove sprite">✕</button>
+                      </div>
+                      <p style={{ fontSize: 9, color: "var(--text-dim)", marginTop: 6, lineHeight: 1.6 }}>
+                        Shader samples the sprite via <code style={{color:"var(--accent)"}}>u_graphic</code>.
+                        Drop a new image to replace.
+                      </p>
+                    </div>
+                  ) : (
+                    <div
+                      className="sprite-drop-zone"
+                      onDragOver={e => { e.preventDefault(); e.currentTarget.classList.add("drag-over"); }}
+                      onDragLeave={e => e.currentTarget.classList.remove("drag-over")}
+                      onDrop={e => {
+                        e.preventDefault();
+                        e.currentTarget.classList.remove("drag-over");
+                        handleImageFile(e.dataTransfer.files?.[0]);
+                      }}
+                    >
+                      <input type="file" accept="image/*"
+                        onChange={e => handleImageFile(e.target.files?.[0])} />
+                      <div style={{ fontSize: 16, marginBottom: 4 }}>🖼</div>
+                      <div>Drop image here</div>
+                      <div style={{ fontSize: 9, marginTop: 2 }}>or click to browse</div>
+                      <div style={{ fontSize: 9, marginTop: 4, color: "var(--text-dim)" }}>
+                        PNG, JPG, GIF, WebP · also drop onto canvas
+                      </div>
+                    </div>
+                  )}
+                </Section>
+
+                {/* Custom uniforms */}
                 <Section title="Custom Uniforms" badge={uniformEntries.length} defaultOpen={true}>
                   {uniformEntries.length === 0 ? (
                     <div className="no-uniforms">
@@ -1083,13 +1155,13 @@ void main() {
                       <br />
                       <span style={{ fontSize: 9 }}>
                         Declare <code style={{ color: "var(--accent)" }}>uniform float u_myVar;</code>
-                        <br />
-                        in your shader (non-built-in), then hit Apply.
+                        <br />in your shader (non-built-in), then hit Apply.
                       </span>
                     </div>
                   ) : (
                     uniformEntries.map(([name, { type, values }]) => (
-                      <UniformRow key={name} name={name} type={type} values={values} onChange={v => updateUniform(name, v)} />
+                      <UniformRow key={name} name={name} type={type} values={values}
+                        onChange={v => updateUniform(name, v)} />
                     ))
                   )}
                 </Section>
@@ -1097,13 +1169,13 @@ void main() {
                 {/* Built-in reference */}
                 <Section title="Built-in Uniforms" defaultOpen={false}>
                   {[
-                    ["float", "u_time_ms", "ms since page load"],
-                    ["vec2", "u_resolution", "screen size"],
-                    ["vec2", "u_graphic_resolution", "graphic size"],
-                    ["sampler2D", "u_graphic", "actor texture"],
-                    ["vec4", "u_color", "material color"],
-                    ["float", "u_opacity", "graphic opacity"],
-                    ["vec2", "v_uv", "UV coords (in)"],
+                    ["float",     "u_time_ms",           "ms since page load"],
+                    ["vec2",      "u_resolution",         "screen size"],
+                    ["vec2",      "u_graphic_resolution", "graphic size"],
+                    ["sampler2D", "u_graphic",            "actor texture / sprite"],
+                    ["vec4",      "u_color",              "material color"],
+                    ["float",     "u_opacity",            "graphic opacity"],
+                    ["vec2",      "v_uv",                 "UV coords (in)"],
                   ].map(([t, n, d]) => (
                     <div key={n} style={{ display: "flex", gap: 5, alignItems: "baseline", flexWrap: "wrap" }}>
                       <span className={`type-badge ${/vec/.test(t) ? "vec" : ""}`}>{t}</span>
@@ -1125,41 +1197,37 @@ void main() {
                       <input type="number" value={posY} step="10" onChange={e => setPosY(+e.target.value)} />
                     </div>
                   </div>
-                  <Slider label="Scale" min={0.1} max={4} step={0.05} value={scale} onChange={setScale} />
-                  <Slider label="Rotation (deg)" min={-180} max={180} step={1} value={rot} onChange={setRot} />
+                  <Slider label="Scale"          min={0.1} max={4}    step={0.05} value={scale} onChange={setScale} />
+                  <Slider label="Rotation (deg)" min={-180} max={180} step={1}    value={rot}   onChange={setRot}   />
                 </Section>
 
                 {/* Debug */}
                 <Section title="Debug">
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <div className="stat-chip">
-                      FPS <span>{fps}</span>
-                    </div>
-                    <div className="stat-chip">
-                      Engine <span>{ready ? "running" : "init…"}</span>
-                    </div>
-                    <div className="stat-chip">
-                      Shader{" "}
-                      <span style={{ color: error ? "var(--red)" : "var(--green)" }}>{error ? "error" : compiled ? "ok" : "—"}</span>
-                    </div>
-                    <div className="stat-chip">
-                      Sidebar <span>{sidebarW}px</span>
-                    </div>
+                    <div className="stat-chip">FPS <span>{fps}</span></div>
+                    <div className="stat-chip">Engine <span>{ready ? "running" : "init…"}</span></div>
+                    <div className="stat-chip">Shader <span style={{ color: error ? "var(--red)" : "var(--green)" }}>
+                      {error ? "error" : compiled ? "ok" : "—"}
+                    </span></div>
+                    <div className="stat-chip">Sprite <span>{spriteFile ? "loaded" : "none"}</span></div>
+                    <div className="stat-chip">Sidebar <span>{sidebarW}px</span></div>
                   </div>
                 </Section>
+
               </div>
             </div>
 
             {/* ── CANVAS ── */}
-            <div className="canvas-wrap">
+            <div
+              className={`canvas-wrap ${canvasDragOver ? "canvas-drag-over" : ""}`}
+              onDragOver={onCanvasDragOver}
+              onDragLeave={onCanvasDragLeave}
+              onDrop={onCanvasDrop}
+            >
               <div id="excalibur-root" />
               <div className="debug-bar">
-                <div className="stat-chip">
-                  {fps} <span>fps</span>
-                </div>
-                <div className="stat-chip">
-                  ExcaliburJS <span>0.32</span>
-                </div>
+                <div className="stat-chip">{fps} <span>fps</span></div>
+                <div className="stat-chip">ExcaliburJS <span>0.29</span></div>
               </div>
             </div>
           </div>
